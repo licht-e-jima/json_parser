@@ -1,4 +1,4 @@
-package calculation
+package json
 
 type (
 	node interface {
@@ -23,14 +23,14 @@ type (
 		elements []node
 	}
 
-	structNode struct {
-		values [string]node
+	structureNode struct {
+		values map[string]node
 	}
 )
 
-func (*stringNode) dummy()
-func (*numberNode) dummy()
-func (*booleanNode) dummy()
-func (*nullNode) dummy()
-func (*arrayNode) dummy()
-func (*structNode) dummy()
+func (*stringNode) dummy()    {}
+func (*numberNode) dummy()    {}
+func (*booleanNode) dummy()   {}
+func (*nullNode) dummy()      {}
+func (*arrayNode) dummy()     {}
+func (*structureNode) dummy() {}

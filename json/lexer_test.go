@@ -89,24 +89,30 @@ func TestLexer_scan(t *testing.T) {
 			err:       nil,
 		},
 		{
+			name:      ",",
+			str:       ",",
+			tokenType: commaType,
+			err:       nil,
+		},
+		{
 			name: "無効なjson",
 			str:  "abc",
-			err:  ErrInvalidToken,
+			err:  ErrInvalidToken{expected: "number, t, f, n, \", [, ], {, }, : or ,", got: "a"},
 		},
 		{
 			name: "無効な数字",
 			str:  "1.",
-			err:  ErrInvalidToken,
+			err:  ErrInvalidToken{expected: "number or .", got: ""},
 		},
 		{
 			name: "無効な数字",
 			str:  ".1",
-			err:  ErrInvalidToken,
+			err:  ErrInvalidToken{expected: "number, t, f, n, \", [, ], {, }, : or ,", got: "."},
 		},
 		{
 			name: "無効な数字",
 			str:  "1..1",
-			err:  ErrInvalidToken,
+			err:  ErrInvalidToken{expected: "number", got: "."},
 		},
 	}
 

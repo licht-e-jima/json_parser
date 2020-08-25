@@ -1,7 +1,6 @@
 package json
 
 import (
-	"errors"
 	"fmt"
 )
 
@@ -13,15 +12,12 @@ const (
 	lBraceType   = tokenType("{")
 	rBraceType   = tokenType("}")
 	colonType    = tokenType(":")
+	commaType    = tokenType(",")
 	stringType   = tokenType("string")
 	numberType   = tokenType("number")
 	booleanType  = tokenType("bool")
 	nullType     = tokenType("null")
 	eofType      = tokenType("EOF")
-)
-
-var (
-	ErrInvalidToken error = errors.New("invalid token is found")
 )
 
 type (
@@ -34,7 +30,16 @@ type (
 		str []rune
 		idx int
 	}
+
+	ErrInvalidToken struct {
+		expected string
+		got      string
+	}
 )
+
+func (e ErrInvalidToken) Error() string {
+	return fmt.Sprintf("invalid token is found: expected %s but got %s", e.expected, e.got)
+}
 
 func newLexer(str string) *lexer {
 	return &lexer{str: []rune(str), idx: 0}
@@ -48,8 +53,8 @@ func (l *lexer) scan() (*token, error) {
 	char := l.next()
 	for {
 		switch char {
-		case "\n", " ":
-			continue
+		case "\n", "\t", " ":
+			char = l.next()
 		case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
 			return l.numberType(char)
 		case "t":
@@ -70,8 +75,10 @@ func (l *lexer) scan() (*token, error) {
 			return &token{tokenType: rBraceType, char: char}, nil
 		case ":":
 			return &token{tokenType: colonType, char: char}, nil
+		case ",":
+			return &token{tokenType: commaType, char: char}, nil
 		default:
-			return nil, ErrInvalidToken
+			return nil, ErrInvalidToken{expected: "number, t, f, n, \", [, ], {, }, : or ,", got: char}
 		}
 	}
 }
@@ -88,7 +95,7 @@ func (l *lexer) numberType(f string) (*token, error) {
 			num = fmt.Sprintf("%s%s", num, l.next())
 		case ".":
 			if isDecimal {
-				return nil, ErrInvalidToken
+				return nil, ErrInvalidToken{expected: "number", got: next}
 			}
 
 			isDecimal = true
@@ -97,7 +104,7 @@ func (l *lexer) numberType(f string) (*token, error) {
 		default:
 			isNum = false
 			if endWithDot {
-				return nil, ErrInvalidToken
+				return nil, ErrInvalidToken{expected: "number or .", got: next}
 			}
 		}
 	}
@@ -111,7 +118,7 @@ func (l *lexer) booleanType(b string) (*token, error) {
 		}
 
 		if l.next() != string(c) {
-			return nil, ErrInvalidToken
+			return nil, ErrInvalidToken{expected: string(c), got: l.next()}
 		}
 	}
 
@@ -125,7 +132,7 @@ func (l *lexer) nullType() (*token, error) {
 		}
 
 		if l.next() != string(c) {
-			return nil, ErrInvalidToken
+			return nil, ErrInvalidToken{expected: string(c), got: l.next()}
 		}
 	}
 
@@ -143,7 +150,7 @@ func (l *lexer) stringType() (*token, error) {
 		case `"`:
 			return &token{tokenType: stringType, char: char}, nil
 		case "":
-			return nil, ErrInvalidToken
+			return nil, ErrInvalidToken{expected: "other than EOF", got: "EOF"}
 		default:
 			char = fmt.Sprintf("%s%s", char, n)
 		}
@@ -161,9 +168,9 @@ func (l *lexer) next() string {
 }
 
 func (l *lexer) peek() string {
-	if len(l.str) == l.idx {
+	if len([]rune(l.str)) == l.idx {
 		return ""
 	}
 
-	return string(l.str[l.idx])
+	return string([]rune(l.str)[l.idx])
 }
