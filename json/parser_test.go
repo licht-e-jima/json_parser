@@ -39,7 +39,7 @@ func TestParser_ll1(t *testing.T) {
 		expected expected
 	}{
 		{
-			name: "組み合わせ",
+			name: "正常",
 			str:  jsonStr,
 			expected: expected{
 				node: &structureNode{
